@@ -1,0 +1,43 @@
+---
+<%
+  blacklisted_ranges = p("scalablesyslog.scheduler.blacklisted_syslog_ranges")
+  blacklisted_ips = blacklisted_ranges.map do |range|
+    "#{range['start']}-#{range['end']}"
+  end.join(",")
+  adapter_addrs = []
+  adapter_port = 0
+  if_link("adapter_addrs") do |l|
+    adapter_addrs = l.instances.map(&:address).join(",")
+    adapter_port = l.p('scalablesyslog.adapter.port')
+  end.else do
+    adapter_addrs = p('scalablesyslog.adapter.addrs').join(",")
+    adapter_port = p('scalablesyslog.adapter.port')
+  end
+%>
+processes:
+- name: scheduler
+  executable: /var/vcap/packages/scheduler/scheduler
+  args:
+  - "--adapter-addrs=<%= adapter_addrs %>"
+  - "--api-url=<%= p("scalablesyslog.scheduler.api.url") %>"
+  - "--health=:<%= p('scalablesyslog.scheduler.health') %>"
+  - "--metric-ingress-addr=<%= p("scalablesyslog.scheduler.metric.addr") %>"
+  - "--pprof=localhost:<%= p('scalablesyslog.scheduler.pprof') %>"
+  - --adapter-cn=<%= p("scalablesyslog.scheduler.tls.client.adapter_cn") %>
+  - --adapter-port=<%= adapter_port %>
+  - --api-ca=/var/vcap/jobs/scheduler/certs/api_ca.crt
+  - --api-cert=/var/vcap/jobs/scheduler/certs/api_client.crt
+  - --api-cn=<%= p("scalablesyslog.scheduler.tls.api.cn") %>
+  - --api-key=/var/vcap/jobs/scheduler/certs/api_client.key
+  - --api-polling-interval=<%= p("scalablesyslog.scheduler.api.polling_interval") %>
+  - --api-skip-cert-verify=<%= p("scalablesyslog.scheduler.tls.api.skip_cert_verify") %>
+  - --blacklist-ranges=<%= blacklisted_ips %>
+  - --ca=/var/vcap/jobs/scheduler/certs/ca.crt
+  - --cert=/var/vcap/jobs/scheduler/certs/scheduler.crt
+  - --key=/var/vcap/jobs/scheduler/certs/scheduler.key
+  - --metric-emitter-interval=<%= p('metric_emitter.interval') %>
+  - --metric-ingress-cn=<%= p("scalablesyslog.scheduler.metric.cn") %>
+  env:
+  limits:
+    open_files: 8192
+  workdir: /var/vcap/packages/scheduler

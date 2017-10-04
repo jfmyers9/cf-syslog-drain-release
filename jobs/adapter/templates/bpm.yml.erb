@@ -1,0 +1,27 @@
+---
+processes:
+- name: adapter
+  executable: /var/vcap/packages/adapter/adapter
+  args:
+  - "--addr=:<%= p('scalablesyslog.adapter.port') %>"
+  - "--health=:<%= p('scalablesyslog.adapter.health') %>"
+  - "--logs-api-addr=<%= p("scalablesyslog.adapter.logs.addr") %>"
+  - "--metric-ingress-addr=<%= p('scalablesyslog.metric_ingress_addr') %>"
+  - "--pprof=localhost:<%= p('scalablesyslog.adapter.pprof') %>"
+  - --ca=/var/vcap/jobs/adapter/certs/ca.crt
+  - --cert=/var/vcap/jobs/adapter/certs/adapter.crt
+  - --cn=<%= p('scalablesyslog.adapter.tls.cn') %>
+  - --key=/var/vcap/jobs/adapter/certs/adapter.key
+  - --metric-emitter-interval=<%= p('metric_emitter.interval') %>
+  - --metric-ingress-cn=<%= p('scalablesyslog.metric_ingress_cn') %>
+  - --rlp-ca=/var/vcap/jobs/adapter/certs/rlp_ca.crt
+  - --rlp-cert=/var/vcap/jobs/adapter/certs/adapter_rlp.crt
+  - --rlp-cn=<%= p('scalablesyslog.adapter_rlp.tls.cn') %>
+  - --rlp-key=/var/vcap/jobs/adapter/certs/adapter_rlp.key
+  - --source-index=<%= spec.index.to_s %>
+  - --syslog-dial-timeout=<%= p('scalablesyslog.adapter.syslog_dial_timeout') %>
+  - --syslog-io-timeout=<%= p('scalablesyslog.adapter.syslog_io_timeout') %>
+  - --syslog-skip-cert-verify=<%= p('scalablesyslog.adapter.syslog_skip_cert_verify') %>
+  workdir: /var/vcap/packages/adapter
+  limits:
+    open_files: 8192
